@@ -7,7 +7,7 @@ Stable tag: trunk
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
-Completely encrypts blog posts so that even with access to the WordPress database your posts will be private.
+Encrypts blog posts so that even with access to the WordPress database your posts will be private.
 
 == Description ==
 
@@ -19,5 +19,7 @@ If you want to try this plugin out best to do so on a new install, works nicely 
 == Installation ==
 
 Extract the zip file and just drop the contents in the wp-content/plugins/ directory of your WordPress installation and then activate the Plugin from Plugins page.
+
 == Changelog ==
-View https://github.com/marcusds/EncryptedBlog/commits/master for changelog.
+
+To view the changelog visit: https://github.com/marcusds/EncryptedBlog/commits/master
