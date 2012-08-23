@@ -3,7 +3,7 @@
 Plugin Name: Encrypted Blog
 Plugin URI: https://github.com/marcusds/EncryptedBlog
 Description: Encrypts blog posts so that even with access to the WordPress database your posts will be private.
-Version: 0.0.3.2
+Version: 0.0.3.3
 Author: marcusds
 Author URI: https://github.com/marcusds
 License: GPL2
@@ -28,11 +28,11 @@ License: GPL2
 class encryptblog {
 
 	/**
-	 * Filter to replace the [caption] shortcode text with HTML5 compliant code
-	 *
-	 * @return text HTML content describing embedded figure
+	 * Decrypts and returns content
+	 * @param string $val Content coming from wordpress
+	 * @return text Decrypted content
 	 **/
-	function decrypt_content($val) {
+	function decrypt_content( $val ) {
 		if( isset( $_SESSION['encryption_key'] ) ) {	
 			$val = encryptblog::encdec( $val, $_SESSION['encryption_key'] );
 		}
@@ -40,9 +40,9 @@ class encryptblog {
 	}
 
 	/**
-	 * Filter to replace the [caption] shortcode text with HTML5 compliant code
-	 *
-	 * @return text HTML content describing embedded figure
+	 * Encrypts and returns content
+	 * @param string $val Content coming from wordpress
+	 * @return text Encrypted content
 	 **/
 	function encrypt_content( $val ) {
 		if( isset( $_SESSION['encryption_key'] ) ) {	
@@ -51,6 +51,12 @@ class encryptblog {
 		return $val;
 	}
 
+	/**
+	 * Decrypts and encrypts content against string 
+	 * @param string $str String to encrypt
+	 * @param string $key Key to encrypt against
+	 * @return string Decrypted or encrypted string
+	 */
 	function encdec( $str, $key = '' ) {
 		if ($key == '') {
 			return $str;
@@ -79,6 +85,9 @@ class encryptblog {
 		return $str;
 	}
 
+	/**
+	 * Starts a session in WordPress
+	 */
 	function start_session() {
 		if( ! session_id() ) {
 			session_start();
@@ -88,12 +97,18 @@ class encryptblog {
 		}
 	}
 
+	/**
+	 * Ends a session in WordPress
+	 */
 	function end_session() {
 		session_destroy();
 	}	
  
-	// @param $template - Full path to the normal template file. 
-	function key_get_template($template) { 
+	/**
+	 * When no key is set show form asking for one.
+	 * @param $template - Full path to the normal template file. 
+	 */
+	function key_get_template( $template ) { 
 		if( is_user_logged_in() && ! isset( $_SESSION['encryption_key'] ) ) {
 			return dirname( __FILE__ ) . '/encrypted_blog_form.php';
 		} else {
@@ -101,14 +116,13 @@ class encryptblog {
 		}
 	} 
 	
-	function login_redirect($redirect_to, $request){
-		global $current_user;
-		get_currentuserinfo();
-		//is there a user to check?
-		if(is_array($current_user->roles))
-		{
-			return home_url(); // We need to always redirect somewhere where it'll check the template so that we can fire key_get_template() and get the user's key.
-		}
+	/**
+	 * Redirects users always to homepage, never to wp-admin. We need to do so we can force them to enter key.s
+	 * @param string $redirect_to
+	 * @param string $request
+	 */
+	function login_redirect( $redirect_to, $request ) {
+		return home_url();
 	}
 }
 
