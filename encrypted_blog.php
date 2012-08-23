@@ -3,7 +3,7 @@
 Plugin Name: Encrypted Blog
 Plugin URI: https://github.com/marcusds/EncryptedBlog
 Description: Encrypts blog posts so that even with access to the WordPress database your posts will be private.
-Version: 0.0.5.1
+Version: 0.0.6
 Author: marcusds
 Author URI: https://github.com/marcusds
 License: GPL2
@@ -53,11 +53,11 @@ class encryptblog {
 
 	/**
 	 * Encrypts our content
-	 * @param string $decrypted Content to encrypt
+	 * @param string $content Content to encrypt
 	 * @param string $key Key to encrypt against
 	 * @return boolean|string
 	 */
-	function encrypt( $decrypted, $key ) {
+	function encrypt( $content, $key ) {
 		$keyhash = hash('SHA256', $key, true);
 		if ( version_compare( PHP_VERSION, '5.3', '<' ) ) {
 			srand();
@@ -66,25 +66,81 @@ class encryptblog {
 		if ( strlen( $iv_base64 = rtrim( base64_encode( $iv ), '=' ) ) != 22 ) {
 			return false;
 		}
-		$encrypted = base64_encode( mcrypt_encrypt( MCRYPT_RIJNDAEL_128, $keyhash, $decrypted . md5( $decrypted ), MCRYPT_MODE_CBC, $iv ) );
+		$encrypted = base64_encode( mcrypt_encrypt( MCRYPT_RIJNDAEL_128, $keyhash, $content . md5( $content ), MCRYPT_MODE_CBC, $iv ) );
 		return $iv_base64 . $encrypted;
 	}
 
 	/**
 	 * Decrypts our content
-	 * @param string $encrypted Content to decrypt
+	 * @param string $content Content to decrypt
 	 * @param string $key Key to decrypt against
-	 * @return boolean|string false for fail, string on success
+	 * @parama boolean $falseonerror return false on error, true on success
+	 * @return string Error on fail, content on success
 	 */
-	function decrypt($encrypted, $key) {
+	function decrypt( $content, $key, $falseonerror = false ) {
+		
+		if( get_query_var( 'encrypt' ) && is_user_logged_in() && isset( $_SESSION['encryption_key'] ) && $falseonerror == false ) {
+			
+			$nonce = $_REQUEST['_wpnonce'];
+			if ( ! wp_verify_nonce( $nonce, 'encrypt_old' ) ) exit( 'Security check' );
+		
+			remove_action( 'the_content', array( 'encryptblog', 'decrypt_content' ) );
+			
+			if( encryptblog::decrypt( get_the_content(), $key, true ) !== false ) {
+				return '<p><a href="'.get_permalink().'">Post encrypted - click here to continue.</a></p>';
+			}
+			
+			$update_post = array();
+			$update_post['ID'] = get_the_ID();
+			$update_post['post_content'] = $content;
+		
+			wp_update_post( $update_post );
+			
+			return '<p><a href="'.get_permalink().'">Post encrypted - click here to continue.</a></p>';
+		}
+		
 		$keyhash = hash( 'SHA256', $key, true );
-		$iv = base64_decode( substr( $encrypted, 0, 22 ) . '==' );
-		$encrypted = substr( $encrypted, 22 );
-		$decrypted = rtrim( mcrypt_decrypt( MCRYPT_RIJNDAEL_128, $keyhash, base64_decode( $encrypted ), MCRYPT_MODE_CBC, $iv ), "\0\4" );
+		$iv = base64_decode( substr( $content, 0, 22 ) . '==' );
+		if ( empty( $iv ) ) {
+			if( $falseonerror == true ) {
+				return false;
+			}
+			if( is_user_logged_in() && isset( $_SESSION['encryption_key'] ) ) {
+				return encryptblog::encrypt_old( get_the_ID() ).$content;
+			} else {
+				return $content;
+			}
+		}
+		$encrypted = substr( $content, 22 );
+
+		$decrypted = @mcrypt_decrypt( MCRYPT_RIJNDAEL_128, $keyhash, base64_decode( $encrypted ), MCRYPT_MODE_CBC, $iv );
+		
+		$decrypted = rtrim( $decrypted, "\0\4" );
 		$hash = substr( $decrypted, -32 );
 		$decrypted = substr( $decrypted, 0, -32 );
-		if ( md5($decrypted) != $hash ) return 'error';
+		
+		if ( md5($decrypted) != $hash ) {
+			if( $falseonerror == true ) {
+				return false;
+			}
+			if( is_user_logged_in() && isset( $_SESSION['encryption_key'] ) ) {
+				return encryptblog::encrypt_old( get_the_ID() ).$content;
+			} else {
+				return $content;
+			}
+		}
 		return $decrypted;
+	}
+	
+	function encrypt_old($postid) {
+		$link = get_permalink( $postid );
+		if( strpos( $link, '?' ) !== false ) {
+			$link .= '&amp;encrypt=true';
+		} else {
+			$link .= '?encrypt=true';
+		}
+		$link = wp_nonce_url( $link, 'encrypt_old' );
+		return '<p><a onclick="return confirm(\'Are you sure? This will not encode any previous revisions saved.\');" href="'.$link.'">Would you like to encrypt this post against the current key?</a></p>';
 	}
 	
 	/**
@@ -104,7 +160,6 @@ class encryptblog {
 	 */
 	function end_session() {
 		session_destroy();
-		echo 'session_destroy';
 	}	
  
 	/**
@@ -148,8 +203,6 @@ class encryptblog {
 	
 	/**
 	 * Redirects user to homepage, but with redirect url so we can go there after getting the key.
-	 * @param unknown_type $user_login
-	 * @param unknown_type $user
 	 */
 	function setup_redirect() {
 		wp_safe_redirect( get_site_url().'?redirect_to='.urlencode($_POST['redirect_to']), 302 );
@@ -160,14 +213,23 @@ class encryptblog {
 	 * Users who are not logged in won't able to see the blog's title.
 	 * @return string 
 	 */
-	function hide_title() {
+	function hide_title( $array ) {
 		if( ! is_user_logged_in() ) {
 			return 'Log in required';
+		} else {
+			return $array;
 		}
+	}
+	
+	
+	function setup_queryvars( $qvars )
+	{
+		$qvars[] = 'encrypt';
+		return $qvars;
 	}
 }
 
-// Setup filters.
+// Setup filters & actions.
 add_filter( 'the_content', array( 'encryptblog', 'decrypt_content' ), 1, 1 );
 add_filter( 'content_edit_pre', array( 'encryptblog', 'decrypt_content' ), 1, 1 );
 add_filter( 'content_save_pre', array( 'encryptblog', 'encrypt_content' ), 1, 1 );
@@ -176,9 +238,10 @@ add_filter( 'init', array( 'encryptblog', 'start_session' ), 1 );
 add_filter( 'login_redirect', array( 'encryptblog', 'login_redirect' ), 10, 3 );
 add_action( 'template_redirect', array('encryptblog', 'must_be_logged_in' ) );
 add_action( 'wp_logout', array( 'encryptblog', 'end_session' ) );
-add_action( 'wp_login', array( 'encryptblog', 'end_session' ) );
+//add_action( 'wp_login', array( 'encryptblog', 'end_session' ) );
+add_filter( 'query_vars', array( 'encryptblog', 'setup_queryvars' ) );
 add_action( 'wp_login', array( 'encryptblog', 'setup_redirect' ), 10 );
-add_action( 'bloginfo', array( 'encryptblog', 'hide_title') );
+add_action( 'bloginfo', array( 'encryptblog', 'hide_title') , 10, 1 );
 
 // Remove feeds - they won't be decrypted, so there is no point in having them. They are just another potential hole. I may provide a way in the future to decrypt feeds, but it'll be far down the list because I think it's silly.
 remove_action( 'do_feed_rdf', 'do_feed_rdf', 10, 1 );

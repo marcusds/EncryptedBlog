@@ -32,7 +32,6 @@
 		<input type="submit" name="wp-submit" id="wp-submit" class="button-primary" value="Continue" tabindex="100" />
 	</p>
 	<p>
-		Key will always be at least 8 characters.
 	</p>
 </form>
 

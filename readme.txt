@@ -7,10 +7,10 @@ Stable tag: trunk
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
-Encrypts blog posts so that even with access to the WordPress database your posts will be private.
+Encrypts WordPress blog posts and pages so that even with access to the WordPress database your posts will still be private and secure.
 
 == Description ==
-Completely encrypts blog posts so that even with access to the WordPress database your posts will be private.
+Encrypts WordPress blog posts and pages so that even with access to the WordPress database your posts will stile be private and secure.
 This plugin is in ALPHA! Be incredibly careful in your use of it.
 It will now encrypt old blog posts and will probably just wreck them will trying to decrypt them.
 If you want to try this plugin out best to do so on a new install, works nicely then at least.
