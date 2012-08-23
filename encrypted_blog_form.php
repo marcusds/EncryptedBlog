@@ -10,9 +10,6 @@
 	<body class="login">
 	<div id="login">
 		<h1><a href="http://wordpress.org/" title="Powered by WordPress"><?php echo bloginfo( 'name' ); ?></a></h1>
-	<?php 
-	print_r($_SESSION);
-	?>
 <form name="loginform" id="loginform" action="<?php
 	if( isset( $_GET['redirect_to'] ) && !empty( $_GET['redirect_to'] ) )
 	{
