@@ -3,7 +3,7 @@
 Plugin Name: Encrypted Blog
 Plugin URI: https://github.com/marcusds/EncryptedBlog
 Description: Encrypts blog posts so that even with access to the WordPress database your posts will be private.
-Version: 0.0.4
+Version: 0.0.5
 Author: marcusds
 Author URI: https://github.com/marcusds
 License: GPL2
@@ -34,7 +34,7 @@ class encryptblog {
 	 **/
 	function decrypt_content( $val ) {
 		if( isset( $_SESSION['encryption_key'] ) ) {	
-			$val = encryptblog::encdec( $val, $_SESSION['encryption_key'] );
+			$val = encryptblog::decrypt( $val, $_SESSION['encryption_key'] );
 		}
 		return $val;
 	}
@@ -46,45 +46,47 @@ class encryptblog {
 	 **/
 	function encrypt_content( $val ) {
 		if( isset( $_SESSION['encryption_key'] ) ) {	
-			$val = encryptblog::encdec( $val, $_SESSION['encryption_key'] );
+			$val = encryptblog::encrypt( $val, $_SESSION['encryption_key'] );
 		}
 		return $val;
 	}
 
 	/**
-	 * Decrypts and encrypts content against string 
-	 * @param string $str String to encrypt
+	 * Encrypts our content
+	 * @param string $decrypted Content to encrypt
 	 * @param string $key Key to encrypt against
-	 * @return string Decrypted or encrypted string
+	 * @return boolean|string
 	 */
-	function encdec( $str, $key = '' ) { // TODO Replace with a much more secure encryption system.
-		if ($key == '') {
-			return $str;
+	function encrypt( $decrypted, $key ) {
+		$keyhash = hash('SHA256', $key, true);
+		if ( version_compare( PHP_VERSION, '5.3', '<' ) ) {
+			srand();
 		}
-		$key = str_replace( chr( 32 ), '', $key );
-		if( strlen($key) < 8 )
-		{
-			if( isset( $_SESSION['encryption_key'] ) ) {
-				unset( $_SESSION['encryption_key'] );
-			}
-			return 'key error';
+		$iv = mcrypt_create_iv( mcrypt_get_iv_size( MCRYPT_RIJNDAEL_128, MCRYPT_MODE_CBC ), MCRYPT_RAND );
+		if ( strlen( $iv_base64 = rtrim( base64_encode( $iv ), '=' ) ) != 22 ) {
+			return false;
 		}
-		$kl = strlen( $key ) < 32 ? strlen( $key ) : 32;
-		
-		$k = array();
-		for($i = 0; $i < $kl; $i++) {
-			$k[$i] = ord( $key{$i} )&0x1F;
-		}
-		$j = 0;
-		for($i = 0; $i < strlen($str); $i++) {
-			$e = ord( $str{$i} );
-			$str{$i} = $e&0xE0 ? chr( $e ^ $k[$j] ) : chr( $e );
-			$j++;
-			$j = $j == $kl ? 0 : $j;
-		}
-		return $str;
+		$encrypted = base64_encode( mcrypt_encrypt( MCRYPT_RIJNDAEL_128, $keyhash, $decrypted . md5( $decrypted ), MCRYPT_MODE_CBC, $iv ) );
+		return $iv_base64 . $encrypted;
 	}
 
+	/**
+	 * Decrypts our content
+	 * @param string $encrypted Content to decrypt
+	 * @param string $key Key to decrypt against
+	 * @return boolean|string false for fail, string on success
+	 */
+	function decrypt($encrypted, $key) {
+		$keyhash = hash( 'SHA256', $key, true );
+		$iv = base64_decode( substr( $encrypted, 0, 22 ) . '==' );
+		$encrypted = substr( $encrypted, 22 );
+		$decrypted = rtrim( mcrypt_decrypt( MCRYPT_RIJNDAEL_128, $keyhash, base64_decode( $encrypted ), MCRYPT_MODE_CBC, $iv ), "\0\4" );
+		$hash = substr( $decrypted, -32 );
+		$decrypted = substr( $decrypted, 0, -32 );
+		if ( md5($decrypted) != $hash ) return 'error';
+		return $decrypted;
+	}
+	
 	/**
 	 * Starts a session in WordPress
 	 */
@@ -102,6 +104,7 @@ class encryptblog {
 	 */
 	function end_session() {
 		session_destroy();
+		echo 'session_destroy';
 	}	
  
 	/**
