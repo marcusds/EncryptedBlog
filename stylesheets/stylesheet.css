@@ -233,8 +233,12 @@ td {
 
 form {
   background: #f2f2f2;
-  padding: 20px;
-  
+  padding: 20px;  
+}
+
+form.plain {
+	background: transparent;
+	padding: 0;
 }
 
 
