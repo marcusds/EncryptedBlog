@@ -1,6 +1,6 @@
 === Encrypted Blog ===
 Contributors: marcus1060
-Donate link: 
+Donate link: http://marcusds.github.com/EncryptedBlog/
 Tags: security,encryption,privacy,posts
 Requires at least: 3.4.1
 Tested up to: 3.4.1
