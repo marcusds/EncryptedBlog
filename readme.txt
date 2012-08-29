@@ -19,5 +19,7 @@ For maximum security and the only way you will know 100% your data is safe in tr
 == Installation ==
 Extract the zip file and just drop the contents in the wp-content/plugins/ directory of your WordPress installation and then activate the Plugin from Plugins page.
 
+As of now there is no way to unencrypt articles that have been encrypted. This will be added in a later version.
+
 == Changelog ==
-To view the changelog visit: https://github.com/marcusds/EncryptedBlog/commits/master
+To view the changelog visit: https://github.com/marcusds/EncryptedBlog/commits/master
