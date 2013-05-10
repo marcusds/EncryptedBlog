@@ -3,12 +3,12 @@ Contributors: marcus1060
 Donate link: http://marcusds.github.com/EncryptedBlog/
 Tags: security,encryption,privacy,posts
 Requires at least: 3.4.1
-Tested up to: 3.4.1
+Tested up to: 3.6
 Stable tag: trunk
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
-Encrypts WordPress blog posts and pages so that even with access to the WordPress database your posts will still be private and secure.
+The ultimate in WordPress privacy and security. Encrypts WordPress blog posts and pages so that even with access to the WordPress database your posts will still be private and secure.
 
 == Description ==
 Encrypts WordPress blog posts and pages so that even with access to the WordPress database your posts will still be private and secure.
