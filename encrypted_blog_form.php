@@ -64,10 +64,7 @@ d.select();
 
 wp_attempt_focus();
 if(typeof wpOnload=='function')wpOnload();
-</script>
-
-	<p id="backtoblog"><a href="http://jrnl.noveis.net/dev/" title="Are you lost?">&larr; Back to Dev</a></p>
-	
+</script>	
 	</div>
 
 	
