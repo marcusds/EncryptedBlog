@@ -40,18 +40,6 @@ class encryptblog {
 	}
 
 	/**
-	 * Encrypts and returns content
-	 * @param string $val Content coming from wordpress
-	 * @return text Encrypted content
-	 **/
-	function encrypt_content( $val ) {
-		if( isset( $_SESSION['encryption_key'] ) ) {	
-			$val = encryptblog::encrypt( $val, $_SESSION['encryption_key'] );
-		}
-		return $val;
-	}
-
-	/**
 	 * Encrypts our content
 	 * @param string $content Content to encrypt
 	 * @param string $key Key to encrypt against
@@ -63,39 +51,20 @@ class encryptblog {
 	}
 
 	/**
-	 * Decrypts our content
+	 * Decrypts our content. Set data in wrapper, if does not decrypt in JS give button for OLD decrypt.
 	 * @param string $content Content to decrypt
 	 * @param string $key Key to decrypt against
 	 * @parama boolean $falseonerror return false on error, true on success
 	 * @return string Error on fail, content on success
 	 */
 	function decrypt( $content, $key = false, $falseonerror = false ) {
-		
 		global $post;
-		
 		$content = get_the_content();
-		
-		// Set data in wrapper, if does not decrypt in JS give button for OLD decrypt.
-		
 		$nonce = wp_create_nonce('update_post_nonce');
-		
 		$link = admin_url('admin-ajax.php');
-		
+
 		return '<div class="encDataStore" data-enc="'.$content.'"><p class="encblo-error" style="display:none;">Incorrect encryption key or encrypted with old method.<br>
 				<a class="decrypt-old-post" data-nonce="'.$nonce.'" data-post_id="'.$post->ID.'" href="#">Click here to decrypt the post </a>, you can re-encrypt it under the new method after.</p></div>';
-	}
-	
-	/**
-	 * Decrypts our content for the admin panel using PHP instead of Javascript. This isn't great because decrypted content still travels over the internet and the key has to aswell.
-	 * @param string $content Content to decrypt
-	 * @return string Error on fail, content on success
-	 */
-	function decrypt_content_admin ( $content ) {
-		
-		print_r($_COOKIE);
-		
-		GibberishAES::size(256);
-		return GibberishAES::dec($content, $_COOKIE['admin_key']);
 	}
 	
 	/**
@@ -134,66 +103,6 @@ class encryptblog {
 	}
 	
 	/**
-	 * Returns a link that users can click to encrypt entries that aren't encrypted.
-	 * @param int $postid
-	 * @return string HTML
-	 */
-	function encrypt_old( $postid ) {
-		$link = get_permalink( $postid );
-		if( strpos( $link, '?' ) !== false ) {
-			$link .= '&amp;encrypt=true';
-		} else {
-			$link .= '?encrypt=true';
-		}
-		$link = wp_nonce_url( $link, 'encrypt_old' );
-		return '<p><a onclick="return confirm(\'Are you sure? This will not encode any previous revisions saved.\');" href="'.$link.'">Would you like to encrypt this post against the current key?</a></p>';
-	}
-	
-	/**
-	 * Starts a session in WordPress and sets encryption key in session.
-	 */
-	function start_session() {
-		if( ! session_id() ) {
-			session_start();
-		}
-		if( isset( $_POST['encryption_key'] ) ) {
-			$_SESSION['encryption_key'] = $_POST['encryption_key'];
-		}
-	}
-
-	/**
-	 * Ends a session in WordPress
-	 */
-	function end_session() {
-		session_destroy();
-	}	
- 
-	/**
-	 * When no key is set show form asking for one.
-	 * @param $template - Full path to the normal template file. 
-	 */
-	function key_get_template( $template ) {		
-		if( is_user_logged_in() && ! isset( $_SESSION['encryption_key'] ) ) {
-			return dirname( __FILE__ ) . '/encrypted_blog_form.php';
-		} else {
-			return $template;
-		}
-	} 
-	
-	/**
-	 * Redirects users always to homepage, never to wp-admin. We need to do so we can force them to enter a key.
-	 * @param string $redirect_to
-	 * @param string $request
-	 */
-	function login_redirect( $redirect_to, $request ) {
-		if( strpos($redirect_to, 'wp-admin') !== false ) {
-			return home_url();
-		} else {
-			return $redirect_to;
-		}
-	}
-	
-	/**
 	 * Redirect non-logged in users to the log in page.
 	 */
 	function must_be_logged_in() {
@@ -207,13 +116,6 @@ class encryptblog {
 		}
 	}
 	
-	/**
-	 * Redirects user to homepage, but with redirect url so we can go there after getting the key.
-	 */
-	function setup_redirect() {
-		wp_safe_redirect( get_site_url().'?redirect_to='.urlencode($_POST['redirect_to']), 302 );
-		exit;
-	}
 	
 	/**
 	 * Users who are not logged in won't able to see the blog's title.
@@ -225,20 +127,11 @@ class encryptblog {
 		} else {
 			return $array;
 		}
-	}
-	
-	
-	function setup_queryvars( $qvars )
-	{
-		$qvars[] = 'encrypt';
-		return $qvars;
-	}
-	
+	}	
 	
 	/**
 	 * Decrypt old post via AJAX.
 	 */
-	
 	public function callback_decrypt() {
 		global $wpdb; // this is how you get access to the database
 		if ( current_user_can( 'manage_options' ) ) {
@@ -287,29 +180,29 @@ class encryptblog {
 	 * Loads Javascript for the plugin in the admin panel.
 	 */
 	function setup_admin_scripts() {
-		wp_enqueue_script( 'jquery.cookie', plugins_url() . '/EncryptedBlog/jquery.cookie.js', array( 'jquery' ), '1.4.0', false );
 		if(is_admin()) {
+			wp_enqueue_script( 'gibberish-aes', plugins_url() . '/EncryptedBlog/gibberish-aes-1.0.0.min.js', array(), '1.0.0', false );
+			wp_enqueue_script( 'jquery.cookie', plugins_url() . '/EncryptedBlog/jquery.cookie.js', array( 'jquery' ), '1.4.0', false );
 			wp_enqueue_script( 'EB_admin', plugins_url() . '/EncryptedBlog/admin.js', array( 'jquery', 'jquery.cookie' ), '0.0.7', false );
 		}
+	}
+
+	/**
+	 * Disables auto save since that just causes havok with the encrypting.
+	 */
+	function disableautosave() {
+		wp_deregister_script('autosave');
 	}
 }
 
 // Setup filters & actions.
 add_filter( 'the_content', array( 'encryptblog', 'decrypt_content' ), 1, 1 );
-add_filter( 'content_edit_pre', array( 'encryptblog', 'decrypt_content_admin' ), 1, 1 );
-add_filter( 'content_save_pre', array( 'encryptblog', 'encrypt_content' ), 1, 1 );
-//add_filter( 'template_include', array( 'encryptblog', 'key_get_template' ), 1, 1 );
-add_filter( 'init', array( 'encryptblog', 'start_session' ), 1 );
-add_filter( 'login_redirect', array( 'encryptblog', 'login_redirect' ), 10, 3 );
-add_action( 'template_redirect', array('encryptblog', 'must_be_logged_in' ) );
-add_action( 'wp_logout', array( 'encryptblog', 'end_session' ) );
-//add_action( 'wp_login', array( 'encryptblog', 'end_session' ) );
-add_filter( 'query_vars', array( 'encryptblog', 'setup_queryvars' ) );
-add_action( 'wp_login', array( 'encryptblog', 'setup_redirect' ), 10 );
+//1add_action( 'template_redirect', array('encryptblog', 'must_be_logged_in' ) );
 add_action( 'bloginfo', array( 'encryptblog', 'hide_title') , 10, 1 );
 add_action( 'wp_enqueue_scripts', array( 'encryptblog', 'setup_scripts') );
 add_action( 'admin_enqueue_scripts', array( 'encryptblog', 'setup_admin_scripts') );
 add_action( 'wp_ajax_eb_decrypt', array( 'encryptblog', 'callback_decrypt') );
+add_action( 'wp_print_scripts', array( 'encryptblog', 'disableautosave') );
 
 // Remove feeds - they won't be decrypted, so there is no point in having them. They are just another potential hole. I may provide a way in the future to decrypt feeds, but it'll be far down the list because I think it's silly.
 remove_action( 'do_feed_rdf', 'do_feed_rdf', 10, 1 );
