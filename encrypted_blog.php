@@ -182,8 +182,8 @@ class encryptblog {
 	function setup_admin_scripts() {
 		if(is_admin()) {
 			wp_enqueue_script( 'gibberish-aes', plugins_url() . '/EncryptedBlog/gibberish-aes-1.0.0.min.js', array(), '1.0.0', false );
-			wp_enqueue_script( 'jquery.cookie', plugins_url() . '/EncryptedBlog/jquery.cookie.js', array( 'jquery' ), '1.4.0', false );
-			wp_enqueue_script( 'EB_admin', plugins_url() . '/EncryptedBlog/admin.js', array( 'jquery', 'jquery.cookie' ), '0.0.7', false );
+			wp_enqueue_script( 'sessionstorage', plugins_url() . '/EncryptedBlog/sessionstorage.min.js', array(), '1.4', false );
+			wp_enqueue_script( 'EB_admin', plugins_url() . '/EncryptedBlog/admin.js', array( 'jquery', 'sessionstorage' ), '0.0.7', false );
 		}
 	}
 
