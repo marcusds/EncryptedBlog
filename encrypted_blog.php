@@ -232,6 +232,15 @@ class encryptblog {
 		$qvars[] = 'encrypt';
 		return $qvars;
 	}
+	
+	/**
+	 * Check to see if we are upgrading. And if we are we can check if its from a non-compatiable version.
+	 * Unforantly I can't think of a way to check for fresh install since I wasn't logging version numbers before. But in the future it will work better.
+	 */
+	function activate() {
+		update_option( 'encryptedBlogVersion', '0.0.6.3' );
+		update_option( 'encryptedBlogIsOld', false );
+	}
 }
 
 // Setup filters & actions.
@@ -247,6 +256,7 @@ add_action( 'wp_logout', array( 'encryptblog', 'end_session' ) );
 add_filter( 'query_vars', array( 'encryptblog', 'setup_queryvars' ) );
 add_action( 'wp_login', array( 'encryptblog', 'setup_redirect' ), 10 );
 add_action( 'bloginfo', array( 'encryptblog', 'hide_title') , 10, 1 );
+register_activation_hook( __FILE__, array( 'encryptblog', 'activate') );
 
 // Remove feeds - they won't be decrypted, so there is no point in having them. They are just another potential hole. I may provide a way in the future to decrypt feeds, but it'll be far down the list because I think it's silly.
 remove_action( 'do_feed_rdf', 'do_feed_rdf', 10, 1 );
