@@ -3,7 +3,7 @@
 Plugin Name: Encrypted Blog
 Plugin URI: https://github.com/marcusds/EncryptedBlog
 Description: Encrypts blog posts so that even with access to the WordPress database your posts will be private.
-Version: 0.0.6.2
+Version: 0.0.6.3
 Author: marcusds
 Author URI: https://github.com/marcusds
 License: GPL2
