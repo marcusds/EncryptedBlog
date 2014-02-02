@@ -241,6 +241,12 @@ class encryptblog {
 		update_option( 'encryptedBlogVersion', '0.0.6.3' );
 		update_option( 'encryptedBlogIsOld', false );
 	}
+	
+	function update_check() {;
+		if ( get_option( 'encryptedBlogVersion' ) != '0.0.6.3') {
+			update_option( 'encryptedBlogVersion', '0.0.6.3' );
+		}
+	}	
 }
 
 // Setup filters & actions.
@@ -257,6 +263,7 @@ add_filter( 'query_vars', array( 'encryptblog', 'setup_queryvars' ) );
 add_action( 'wp_login', array( 'encryptblog', 'setup_redirect' ), 10 );
 add_action( 'bloginfo', array( 'encryptblog', 'hide_title') , 10, 1 );
 register_activation_hook( __FILE__, array( 'encryptblog', 'activate') );
+add_action('plugins_loaded', array( 'encryptblog', 'update_check') );
 
 // Remove feeds - they won't be decrypted, so there is no point in having them. They are just another potential hole. I may provide a way in the future to decrypt feeds, but it'll be far down the list because I think it's silly.
 remove_action( 'do_feed_rdf', 'do_feed_rdf', 10, 1 );
