@@ -4,7 +4,7 @@ Donate link: http://marcusds.github.com/EncryptedBlog/
 Tags: security,encryption,privacy,posts
 Requires at least: 3.4.1
 Tested up to: 3.8.1
-Stable tag: 0.0.6.4
+Stable tag: 0.0.6.5
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -22,4 +22,8 @@ Extract the zip file and just drop the contents in the wp-content/plugins/ direc
 As of now there is no way to unencrypt articles that have been encrypted. This will be added in a later version.
 
 == Changelog ==
+
+*Fixed minor security issues. This wouldn't have been an issue in the next update anyways, but better safe than sorry.
+*Update now so that you can be compatible with the upcoming new version.
+
 To view the changelog visit: https://github.com/marcusds/EncryptedBlog/commits/master

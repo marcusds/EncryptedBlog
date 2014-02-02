@@ -3,7 +3,7 @@
 Plugin Name: Encrypted Blog
 Plugin URI: https://github.com/marcusds/EncryptedBlog
 Description: Encrypts blog posts so that even with access to the WordPress database your posts will be private.
-Version: 0.0.6.4
+Version: 0.0.6.5
 Author: marcusds
 Author URI: https://github.com/marcusds
 License: GPL2
@@ -81,7 +81,7 @@ class encryptblog {
 		
 		if( get_query_var( 'encrypt' ) && is_user_logged_in() && isset( $_SESSION['encryption_key'] ) && $falseonerror == false ) {
 			
-			$nonce = $_REQUEST['_wpnonce'];
+			$nonce = $_POST['_wpnonce'];
 			if ( ! wp_verify_nonce( $nonce, 'encrypt_old' ) ) exit( 'Security check' );
 		
 			remove_action( 'the_content', array( 'encryptblog', 'decrypt_content' ) );
@@ -156,7 +156,7 @@ class encryptblog {
 			session_start();
 		}
 		if( isset( $_POST['encryption_key'] ) ) {
-			$_SESSION['encryption_key'] = $_POST['encryption_key'];
+			$_SESSION['encryption_key'] = esc_attr($_POST['encryption_key']);
 		}
 	}
 
@@ -238,13 +238,13 @@ class encryptblog {
 	 * Unforantly I can't think of a way to check for fresh install since I wasn't logging version numbers before. But in the future it will work better.
 	 */
 	function activate() {
-		update_option( 'encryptedBlogVersion', '0.0.6.4' );
+		update_option( 'encryptedBlogVersion', '0.0.6.5' );
 		update_option( 'encryptedBlogIsOld', false );
 	}
 	
 	function update_check() {;
-		if ( get_option( 'encryptedBlogVersion' ) != '0.0.6.4') {
-			update_option( 'encryptedBlogVersion', '0.0.6.4' );
+		if ( get_option( 'encryptedBlogVersion' ) != '0.0.6.5') {
+			update_option( 'encryptedBlogVersion', '0.0.6.5' );
 		}
 	}	
 }
