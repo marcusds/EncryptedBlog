@@ -3,7 +3,7 @@ Contributors: marcus1060
 Donate link: http://marcusds.github.com/EncryptedBlog/
 Tags: security,encryption,privacy,posts
 Requires at least: 3.4.1
-Tested up to: 3.6
+Tested up to: 3.8.1
 Stable tag: trunk
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
